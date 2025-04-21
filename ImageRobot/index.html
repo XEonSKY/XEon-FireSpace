@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .captcha-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .captcha-container img {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>用户登录</h2>
+        <input type="text" id="username" placeholder="用户名" required>
+        <input type="password" id="password" placeholder="密码" required>
+        <div class="captcha-container">
+            <input type="text" id="captcha" placeholder="验证码" required>
+            <img id="captcha-image" src="/captcha" alt="验证码" onclick="refreshCaptcha()">
+        </div>
+        <button onclick="handleLogin()">登录</button>
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script>
+        // 刷新验证码
+        function refreshCaptcha() {
+            const captchaImage = document.getElementById('captcha-image');
+            captchaImage.src = '/captcha?' + new Date().getTime(); // 添加时间戳防止缓存
+        }
+
+        // 登录逻辑
+        async function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const captcha = document.getElementById('captcha').value.trim();
+            const errorMessage = document.getElementById('error-message');
+
+            if (!username || !password || !captcha) {
+                errorMessage.textContent = '请填写所有字段';
+                return;
+            }
+            errorMessage.textContent = '';
+
+            try {
+                const response = await fetch('/login_api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        captcha: captcha
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    errorMessage.textContent = '';
+                    alert('登录成功！');
+                    // 可以在这里跳转到其他页面
+                } else {
+                    errorMessage.textContent = result.msg;
+                    refreshCaptcha(); // 验证码错误时刷新验证码
+                }
+            } catch (error) {
+                errorMessage.textContent = '网络错误，请稍后再试';
+            }
+        }
+
+        // 页面加载时刷新验证码
+        window.onload = () => {
+            refreshCaptcha();
+        };
+    </script>
+</body>
+</html>
